@@ -34,10 +34,15 @@ def predict_sliding_window(args):
         if target.exists():
             raise FileExistsError(f'Output already exists; choose a new output directory: {target}')
     inverse = np.zeros(config['num_classes'], dtype=np.uint8)
-    if not args.index_mask and len(config['label_map']) != config['num_classes']:
-        raise ValueError('Multiple grayscale values map to one class; use --index_mask to avoid ambiguous reverse encoding')
-    for pixel, class_id in config['label_map'].items():
-        inverse[class_id] = pixel
+    for class_id in range(config['num_classes']):
+        pixels = [pixel for pixel, mapped_class in config['label_map'].items() if mapped_class == class_id]
+        # Background aliases are saved as 0; foreground grayscale values remain unique.
+        if class_id == 0 and 0 in pixels:
+            inverse[class_id] = 0
+        elif len(pixels) == 1:
+            inverse[class_id] = pixels[0]
+        elif not args.index_mask:
+            raise ValueError('Multiple grayscale values map to one class; use --index_mask to avoid ambiguous reverse encoding')
     for path in files:
         image = load_image(path, config.get('preprocess', True), config.get('preprocessing'))
         prediction = predict_image(model, image, size, device, args.sw_batch_size)

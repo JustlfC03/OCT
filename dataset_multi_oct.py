@@ -1,4 +1,4 @@
-# Mask value 255 denotes intraretinal fluid (class 6 in the OCT example configuration).
+# The OCT configuration uses five retinal layers plus background; excluded mask regions map to background.
 import csv
 import random
 from pathlib import Path
